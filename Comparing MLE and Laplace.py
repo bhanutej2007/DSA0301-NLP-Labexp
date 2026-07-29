@@ -11,19 +11,19 @@ corpus = [
 
 words = []
 
-for s in corpus:
-    words.extend(s.split())
+for sentence in corpus:
+    words.extend(sentence.lower().split())
 
 freq = Counter(words)
 
-V = len(freq)
-N = len(words)
+total = len(words)
+vocab = len(freq)
 
-word = input("Enter word: ")
+word = input("Enter word: ").lower()
 
-mle = freq[word] / N
+mle = freq[word] / total
+laplace = (freq[word] + 1) / (total + vocab)
 
-laplace = (freq[word] + 1) / (N + V)
-
-print("MLE Probability =", mle)
-print("Laplace Probability =", laplace)
+print("Count =", freq[word])
+print("MLE =", round(mle, 4))
+print("Laplace =", round(laplace, 4))
