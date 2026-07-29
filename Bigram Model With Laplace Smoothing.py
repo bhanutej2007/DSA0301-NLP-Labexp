@@ -9,24 +9,34 @@ corpus = [
     "I study Python"
 ]
 
-words = []
-bigrams = []
+words=[]
+bigrams=[]
 
 for s in corpus:
-    t = s.split()
+
+    t=s.split()
+
     words.extend(t)
 
     for i in range(len(t)-1):
-        bigrams.append((t[i], t[i+1]))
+        bigrams.append((t[i],t[i+1]))
 
-uni = Counter(words)
-bi = Counter(bigrams)
+uni=Counter(words)
+bi=Counter(bigrams)
 
-V = len(uni)
+total=len(words)
 
-w1 = input("First word: ")
-w2 = input("Second word: ")
+w1=input("First word: ")
+w2=input("Second word: ")
 
-prob = (bi[(w1,w2)] + 1) / (uni[w1] + V)
+if (w1,w2) in bi:
 
-print("Bigram Probability =", prob)
+    print("Bigram Found")
+
+    print("Probability =",round(bi[(w1,w2)]/uni[w1],4))
+
+else:
+
+    print("Bigram Not Found")
+
+    print("Backoff Probability =",round(uni[w2]/total,4))
