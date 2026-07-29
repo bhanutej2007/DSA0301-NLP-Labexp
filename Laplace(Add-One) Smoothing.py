@@ -11,18 +11,20 @@ corpus = [
 
 words = []
 
-for s in corpus:
-    words.extend(s.split())
+for sentence in corpus:
+    words.extend(sentence.split())
 
 freq = Counter(words)
 
-V = len(freq)
-N = len(words)
+total = len(words)
+vocab = len(freq)
 
-word = input("Enter a word: ")
+word = input("Enter word: ")
 
 count = freq[word]
 
-prob = (count + 1) / (N + V)
+prob = (count + 1) / (total + vocab)
 
-print("Laplace Probability =", prob)
+print("Count =", count)
+print("Vocabulary Size =", vocab)
+print("Laplace Probability =", round(prob,4))
