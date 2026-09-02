@@ -1,0 +1,209 @@
+import re
+import nltk
+import pandas as pd
+
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+    classification_report
+)
+
+nltk.download('stopwords')
+
+# -----------------------------------------
+# 1. DATASET
+# -----------------------------------------
+
+data = {
+    "text": [
+        "I love this product",
+        "This product is excellent",
+        "The service is very good",
+        "I am happy with the product",
+        "This is amazing",
+        "I really enjoyed the experience",
+        "The product works perfectly",
+        "I am satisfied with the service",
+        "This is wonderful",
+        "Very good quality",
+
+        "I hate this product",
+        "This product is terrible",
+        "The service is very bad",
+        "I am disappointed",
+        "This is horrible",
+        "I dislike this product",
+        "Very poor quality",
+        "The product stopped working",
+        "I am unhappy with the service",
+        "Worst experience ever"
+    ],
+
+    "label": [
+        "Positive","Positive","Positive","Positive","Positive",
+        "Positive","Positive","Positive","Positive","Positive",
+
+        "Negative","Negative","Negative","Negative","Negative",
+        "Negative","Negative","Negative","Negative","Negative"
+    ]
+}
+
+df = pd.DataFrame(data)
+
+print("DATASET")
+print(df)
+
+# -----------------------------------------
+# 2. TEXT PREPROCESSING
+# -----------------------------------------
+
+stop_words = set(stopwords.words("english"))
+stemmer = PorterStemmer()
+
+def preprocess(text):
+
+    text = text.lower()
+
+    text = re.sub(r'[^a-zA-Z\s]', '', text)
+
+    words = text.split()
+
+    words = [
+        stemmer.stem(word)
+        for word in words
+        if word not in stop_words
+    ]
+
+    return " ".join(words)
+
+
+df["clean_text"] = df["text"].apply(preprocess)
+
+print("\nPREPROCESSED DATA")
+print(df[["text", "clean_text", "label"]])
+
+# -----------------------------------------
+# 3. TRAIN TEST SPLIT
+# -----------------------------------------
+
+X_train, X_test, y_train, y_test = train_test_split(
+    df["clean_text"],
+    df["label"],
+    test_size=0.30,
+    random_state=42,
+    stratify=df["label"]
+)
+
+# -----------------------------------------
+# 4. TF-IDF
+# -----------------------------------------
+
+vectorizer = TfidfVectorizer()
+
+X_train_tfidf = vectorizer.fit_transform(X_train)
+
+X_test_tfidf = vectorizer.transform(X_test)
+
+print("\nTF-IDF FEATURES")
+print("Training samples:", X_train_tfidf.shape[0])
+print("Features:", X_train_tfidf.shape[1])
+
+# -----------------------------------------
+# 5. MACHINE LEARNING MODEL
+# -----------------------------------------
+
+model = LogisticRegression()
+
+model.fit(X_train_tfidf, y_train)
+
+# -----------------------------------------
+# 6. PREDICTION
+# -----------------------------------------
+
+y_pred = model.predict(X_test_tfidf)
+
+# -----------------------------------------
+# 7. EVALUATION
+# -----------------------------------------
+
+accuracy = accuracy_score(y_test, y_pred)
+
+precision = precision_score(
+    y_test,
+    y_pred,
+    pos_label="Positive"
+)
+
+recall = recall_score(
+    y_test,
+    y_pred,
+    pos_label="Positive"
+)
+
+f1 = f1_score(
+    y_test,
+    y_pred,
+    pos_label="Positive"
+)
+
+print("\n========== PERFORMANCE ==========")
+
+print("Accuracy  :", round(accuracy * 100, 2), "%")
+print("Precision :", round(precision * 100, 2), "%")
+print("Recall    :", round(recall * 100, 2), "%")
+print("F1-Score  :", round(f1 * 100, 2), "%")
+
+# -----------------------------------------
+# 8. CONFUSION MATRIX
+# -----------------------------------------
+
+cm = confusion_matrix(
+    y_test,
+    y_pred,
+    labels=["Positive", "Negative"]
+)
+
+print("\nCONFUSION MATRIX")
+print(cm)
+
+# -----------------------------------------
+# 9. CLASSIFICATION REPORT
+# -----------------------------------------
+
+print("\nCLASSIFICATION REPORT")
+print(classification_report(y_test, y_pred))
+
+# -----------------------------------------
+# 10. NEW TEXT PREDICTION
+# -----------------------------------------
+
+new_text = input("\nEnter text for prediction: ")
+
+processed = preprocess(new_text)
+
+vector = vectorizer.transform([processed])
+
+prediction = model.predict(vector)[0]
+
+probability = model.predict_proba(vector)[0]
+
+print("\n========== PREDICTION ==========")
+
+print("Original Text :", new_text)
+print("Processed Text:", processed)
+print("Prediction    :", prediction)
+
+print(
+    "Confidence    :",
+    round(max(probability) * 100, 2),
+    "%"
+)
